@@ -1,31 +1,28 @@
-var express = require('express');
-var router = express.Router();
+const express = require('express');
+const router = express.Router();
 const userModel = require('./users');
-const postModel = require('./posts')
 const passport = require('passport');
-const localStratergy = require('passport-local')
+const localStrategy = require('passport-local').Strategy;
 
-passport.use(new localStratergy(userModel.authenticate()))
+// Passport Configuration
+passport.use(new localStrategy(userModel.authenticate()));
+passport.serializeUser(userModel.serializeUser());
+passport.deserializeUser(userModel.deserializeUser());
+
 /* GET home page. */
 router.get('/', function(req, res, next) {
-  res.render('index')
+  res.render('index');
 });
 
-router.get('/profile' ,isLoggedIn, function(req,res){
-  res.send('Profile Page')
-})
+router.get('/profile', isLoggedIn, function(req, res) {
+  res.render('profile')
+});
 
 router.post('/register', function(req, res) {
   const { username, email, password, fullName } = req.body;
-/*
-  // Check if fullName is provided in the request body
-  if (!fullName) {
-    return res.status(400).send('Full name is required');
-  }
-*/
   const userData = new userModel({ username, email, fullName });
 
-  userModel.register(userData, password, function(err) {
+  userModel.register(userData, password, function(err, user) {
     if (err) {
       console.error('Error registering user:', err);
       return res.status(500).send('Error registering user');
@@ -37,24 +34,31 @@ router.post('/register', function(req, res) {
   });
 });
 
+// Route for rendering the login page
+router.get('/login', function(req, res) {
+  res.render('login');
+});
 
-router.post('/login' , passport.authenticate("local" , {
-  successRedirect : '/profile' , 
-  failureRedirect : '/'
-}),function(req,res){
+// Route for handling login form submission
+router.post('/login', passport.authenticate('local', {
+  successRedirect: '/profile',
+  failureRedirect: '/login', // Redirect back to login page on authentication failure
+}));
 
-})
+router.get('/logout', function(req, res) {
+  req.logout();
+  res.redirect('/');
+});
 
-router.get('/logout' , function(req,res){
-  req.logout(function(err) {
-    if (err) { return next(err); }
-    res.redirect('/');
-  });
-})
-
-function isLoggedIn(req,res,next){
-  if(req.isAuthenticated()) return next();
-  res.redirect('/')
+function isLoggedIn(req, res, next) {
+  if (req.isAuthenticated()) return next();
+  res.redirect('/login');
 }
+
+router.get('/feed' ,isLoggedIn, function(req,res){
+  res.render('feed')
+})
+
+
 
 module.exports = router;
