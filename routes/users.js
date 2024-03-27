@@ -1,17 +1,17 @@
 const mongoose = require('mongoose');
-const passport = require('passport');
-const plm = require("passport-local-mongoose")
-mongoose.connect("mongodb://localhost:27017/Pintrest")
-//! user Schema
+const passportLocalMongoose = require('passport-local-mongoose');
+
+mongoose.connect("mongodb://localhost:27017/Pintrest");
+
 const userSchema = new mongoose.Schema({
   username: {
     type: String,
     required: true
   },
-  password:  String,
+  password: String,
   posts: [{
-   type:mongoose.Schema.Types.ObjectId,
-   ref : 'Post'
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Post'
   }],
   dp: String,
   email: {
@@ -19,12 +19,12 @@ const userSchema = new mongoose.Schema({
     required: true,
     unique: true
   },
-  fullName: {
-    type: String,
-    required: true
-  }
+  fullName:String
 });
 
-userSchema.plugin(plm)
+// Apply passport-local-mongoose plugin directly to the schema
+userSchema.plugin(passportLocalMongoose);
+
 const User = mongoose.model('User', userSchema);
+
 module.exports = User;

@@ -5,7 +5,7 @@ const postModel = require('./posts')
 const passport = require('passport');
 const localStratergy = require('passport-local')
 
-passport.authenticate(new localStratergy(userModel.authenticate()))
+passport.use(new localStratergy(userModel.authenticate()))
 /* GET home page. */
 router.get('/', function(req, res, next) {
   res.render('index')
@@ -15,17 +15,28 @@ router.get('/profile' ,isLoggedIn, function(req,res){
   res.send('Profile Page')
 })
 
-router.post('/register' , function(req,res){
-  const { username, email } = req.body;
-  const userData = new userModel({ username, email });
+router.post('/register', function(req, res) {
+  const { username, email, password, fullName } = req.body;
+/*
+  // Check if fullName is provided in the request body
+  if (!fullName) {
+    return res.status(400).send('Full name is required');
+  }
+*/
+  const userData = new userModel({ username, email, fullName });
 
-  userModel.register('userData' , req.body.password)
-  .then(function(){
-    passport.authenticate('local')(req,res,function(){
-      res.redirect('/profile')
-    })
-  })
-})
+  userModel.register(userData, password, function(err) {
+    if (err) {
+      console.error('Error registering user:', err);
+      return res.status(500).send('Error registering user');
+    }
+
+    passport.authenticate('local')(req, res, function() {
+      res.redirect('/profile');
+    });
+  });
+});
+
 
 router.post('/login' , passport.authenticate("local" , {
   successRedirect : '/profile' , 
