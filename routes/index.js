@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const userModel = require('./users');
 const passport = require('passport');
+const upload = require('./multer');
+const postModel = require('./posts'); // Import postModel
 const localStrategy = require('passport-local').Strategy;
 
 // Passport Configuration
@@ -14,8 +16,21 @@ router.get('/', function(req, res, next) {
   res.render('index');
 });
 
-router.get('/profile', isLoggedIn, function(req, res) {
-  res.render('profile')
+router.get('/profile', isLoggedIn, async function(req, res) {
+  try {
+    if (!req.session.passport || !req.session.passport.user) {
+      return res.status(401).send('User not authenticated');
+    }
+    const user = await userModel.findOne({ username: req.session.passport.user })
+    .populate("posts")
+    if (!user) {
+      return res.status(404).send('User not found');
+    }
+    res.render('profile', { user });
+  } catch (err) {
+    console.error('Error fetching user profile:', err);
+    res.status(500).send('Internal server error');
+  }
 });
 
 router.post('/register', function(req, res) {
@@ -36,18 +51,42 @@ router.post('/register', function(req, res) {
 
 // Route for rendering the login page
 router.get('/login', function(req, res) {
-  res.render('login');
+  res.render('login', { error: req.flash('error') }); // Sending a flash message
 });
 
 // Route for handling login form submission
 router.post('/login', passport.authenticate('local', {
   successRedirect: '/profile',
-  failureRedirect: '/login', // Redirect back to login page on authentication failure
+  failureRedirect: '/login',
+  failureFlash: true // Redirect back to login page on authentication failure
 }));
 
 router.get('/logout', function(req, res) {
-  req.logout();
+  req.logout(); // Remove callback as it's not needed
   res.redirect('/');
+});
+
+router.post('/upload', upload.single('file'), async function(req, res, next) {
+  if (!req.file) {
+    return res.status(404).send('No files were given');
+  }
+  try {
+    const user = await userModel.findOne({ username: req.session.passport.user });
+    if (!user) {
+      return res.status(404).send('User not found');
+    }
+    const postData = await postModel.create({
+      image: req.file.filename,
+      postText: req.body.caption,
+      user: user._id
+    });
+    user.posts.push(postData._id); // Fixed variable name
+    await user.save();
+    res.send('Success!');
+  } catch (err) {
+    console.error('Error uploading post:', err);
+    res.status(500).send('Internal server error');
+  }
 });
 
 function isLoggedIn(req, res, next) {
@@ -55,10 +94,8 @@ function isLoggedIn(req, res, next) {
   res.redirect('/login');
 }
 
-router.get('/feed' ,isLoggedIn, function(req,res){
-  res.render('feed')
-})
-
-
+router.get('/feed', isLoggedIn, function(req, res) {
+  res.render('feed');
+});
 
 module.exports = router;

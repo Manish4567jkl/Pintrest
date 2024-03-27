@@ -158,3 +158,11 @@ hr {
   border-radius: 20px;
   text-decoration: none;
 }
+
+  
+.error{
+  font-weight: 500;
+  color: #f30d19;
+  text-transform: capitalize;
+  margin : 7px 0;
+}
