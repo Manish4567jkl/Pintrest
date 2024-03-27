@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
-//mongoose.connect("mongodb://localhost:27017/posts")
+
+//! Post schema
 const postSchema = new mongoose.Schema({
   postText: {
     type: String,

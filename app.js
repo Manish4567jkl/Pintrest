@@ -18,6 +18,7 @@ app.use(expressSession({
   saveUninitialized : false,
   secret : "hehehahagugugaga"
 }))
+//! For authorization
 app.use(passport.initialize());
 app.use(passport.session());
 passport.serializeUser(usersRouter.serializeUser());
