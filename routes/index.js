@@ -76,14 +76,16 @@ router.post('/upload', upload.single('file'), async function(req, res, next) {
       return res.status(404).send('User not found');
     }
     const postData = await postModel.create({
-      image: req.file.filename,
+      images: req.file.filename,
       postText: req.body.caption,
       user: user._id
     });
     user.posts.push(postData._id); // Fixed variable name
     await user.save();
-    res.send('Success!');
+    res.redirect('/profile')
+
   } catch (err) {
+    
     console.error('Error uploading post:', err);
     res.status(500).send('Internal server error');
   }

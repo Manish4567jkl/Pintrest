@@ -66,3 +66,10 @@ body {
   .button:hover {
     background-color: #f30d19;
   }
+
+  .cards{
+    display: flex;
+    flex-wrap: wrap;
+    gap:25px;
+    align-items: start;
+  }
