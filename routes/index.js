@@ -82,7 +82,7 @@ router.post('/upload', upload.single('file'), async function(req, res, next) {
     });
     user.posts.push(postData._id); // Fixed variable name
     await user.save();
-    res.redirect('/profile')
+    res.send("Success!")
 
   } catch (err) {
     
